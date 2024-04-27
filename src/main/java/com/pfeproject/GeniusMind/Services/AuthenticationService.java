@@ -24,6 +24,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @AllArgsConstructor
 @Slf4j
@@ -37,6 +39,7 @@ public class AuthenticationService {
 
     @Transactional
     public void register(RegisterRequest request) throws Exception {
+        System.out.println("service user ENS "+ request);
         if(repository.findUserByEmail(request.getEmail()).isPresent())
             throw new UserExistException("User exists !");
         var user = User.builder()
@@ -44,12 +47,11 @@ public class AuthenticationService {
                 .lastname(request.getLastname())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)
+                .role(request.getRole())
                 .niveau(request.getNiveau())
                 .build();
-        System.out.println(user);
-        repository.save(user);
 
+        repository.save(user);
         var jwtToken = jwtService.generateToken(user);
         String link = "http://localhost:4200/activated?token=" + jwtToken;
 
@@ -59,9 +61,6 @@ public class AuthenticationService {
                 "Please confirm your account",
                 body
         );
-//        return AuthenticationResponse.builder()
-//        .token(jwtToken)
-//        .build();
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
@@ -71,11 +70,15 @@ public class AuthenticationService {
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new BadCredentialsException("Invalid password");
         }
+        System.out.println("Helllo service user  "+user.getFirstname());
         String token = jwtService.generateToken(user);
 
         AuthenticationResponse res = new AuthenticationResponse();
         res.setToken(token);
-log.info(res.getToken());
+        res.setRole(user.getRole());
+        res.setNom(user.getFirstname());
+        res.setPrenom(user.getLastname());
+        log.info(res.getToken());
         return res;
 
 
@@ -112,5 +115,9 @@ log.info(res.getToken());
         user.setPassword(passwordEncoder.encode(password.getPassword()));
         log.info(user.getPassword());
         repository.save(user);
+    }
+
+    public List<User> getAccounts() {
+        return repository.findByRole("ENSEI");
     }
 }

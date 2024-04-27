@@ -17,6 +17,7 @@ public class QuestionController {
 
     @PostMapping("/addQuestion/{idLevel}")
     Question addQuestion(@RequestBody Question questionDto, @PathVariable("idLevel") Long idLevel) {
+        System.out.println(" question vené du service heeeeeeeeeeee " + questionDto);
         return questionService.addQuestion(questionDto, idLevel);
     }
 

@@ -25,17 +25,17 @@ public class QuestionService {
     public Question addQuestion(Question question, Level level) {
         level.addQuestion(question);
         levelRepository.save(level);
-        return  questionRepository.save(question);
+        return  question;
     }
     public Question addQuestion(Question questionDto, Long idLevel) {
-        Level level = levelRepository.getOne(idLevel);
+        Level level = levelRepository.getReferenceById(idLevel);
         return addQuestion(questionDto, level);
     }
 
     public List<Question> getQuestions(Long idLevel) {
-        Level level = levelRepository.getOne(idLevel);
-         List<Question> questions = level.getQuestions();
-        return questions;
+        Level level = levelRepository.findById(idLevel).get();
+
+        return level.getQuestions();
     }
 
 

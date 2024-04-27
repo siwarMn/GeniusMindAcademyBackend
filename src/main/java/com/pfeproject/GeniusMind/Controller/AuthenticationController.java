@@ -1,10 +1,13 @@
 package com.pfeproject.GeniusMind.Controller;
+import com.pfeproject.GeniusMind.Entity.User;
 import com.pfeproject.GeniusMind.Exceptions.NotFoundException;
 import com.pfeproject.GeniusMind.Services.AuthenticationService;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -16,13 +19,20 @@ public class AuthenticationController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.OK)
     public void register(@RequestBody RegisterRequest request) throws Exception {
+        System.out.println("aywah ech jbtlna :   " +request);
          service.register(request);
+    }
+
+    @GetMapping("/GetAccounts")
+    @ResponseStatus(HttpStatus.OK)
+    public List<User> GetAccountsAll()  {
+       return service.getAccounts();
     }
 
     @PostMapping("/authenticate")
     @ResponseStatus(HttpStatus.OK)
     public AuthenticationResponse authenticate(@RequestBody AuthenticationRequest request) {
-        System.out.println(request.getEmail());
+        System.out.println(request);
         return service.authenticate(request);
     }
 

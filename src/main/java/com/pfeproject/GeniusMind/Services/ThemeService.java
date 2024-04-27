@@ -27,6 +27,6 @@ public class ThemeService {
     }
 
     public Theme getTheme(Long idTheme) {
-        return repository.getOne(idTheme);
+        return repository.findById(idTheme).get();
     }
 }

@@ -33,13 +33,13 @@ public class LevelService {
     }
 
     public List<Level> getLevels(Long idTheme) {
-        Theme theme = themeDao.getOne(idTheme);
+        Theme theme = themeDao.getReferenceById(idTheme);
          List<Level> levels = theme.getLevels();
         return levels;
     }
 
     public Level getLevel(Long idTheme) {
-        return levelDao.getOne(idTheme);
+        return levelDao.getReferenceById(idTheme);
 
     }
 }

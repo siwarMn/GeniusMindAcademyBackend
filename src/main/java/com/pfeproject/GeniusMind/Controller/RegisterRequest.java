@@ -1,5 +1,6 @@
 package com.pfeproject.GeniusMind.Controller;
 
+import com.pfeproject.GeniusMind.Entity.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,4 +16,5 @@ public class RegisterRequest {
     private String email;
     private String password;
     private String niveau;
+    private Role role;
 }
