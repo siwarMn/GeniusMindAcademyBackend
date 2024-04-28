@@ -21,8 +21,8 @@ public class QuestionController {
         return questionService.addQuestion(questionDto, idLevel);
     }
 
-    @GetMapping("/getQuestions/{idLevel}")
-    List<Question> getQuestions(@PathVariable("idLevel") Long idLevel)  {
-        return questionService.getQuestions(idLevel);
+    @GetMapping("/getQuestions/{idLevel}/{themename}")
+    List<Question> getQuestions(@PathVariable("idLevel") Long idLevel, @PathVariable("themename") String themename)  {
+        return questionService.getQuestions(idLevel, themename);
     }
 }

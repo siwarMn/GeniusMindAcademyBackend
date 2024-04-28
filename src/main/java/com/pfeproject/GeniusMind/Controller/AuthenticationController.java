@@ -15,19 +15,19 @@ import java.util.List;
 public class AuthenticationController {
 
     private final AuthenticationService service;
+    @GetMapping("/GetAccounts")
+    @ResponseStatus(HttpStatus.OK)
+    public List<User> GetAccountsAll()  {
+        System.out.println("tay");
+        return service.getAccounts();
+    }
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.OK)
     public void register(@RequestBody RegisterRequest request) throws Exception {
-        System.out.println("aywah ech jbtlna :   " +request);
          service.register(request);
     }
 
-    @GetMapping("/GetAccounts")
-    @ResponseStatus(HttpStatus.OK)
-    public List<User> GetAccountsAll()  {
-       return service.getAccounts();
-    }
 
     @PostMapping("/authenticate")
     @ResponseStatus(HttpStatus.OK)

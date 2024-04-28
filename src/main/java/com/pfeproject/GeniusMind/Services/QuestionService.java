@@ -2,8 +2,10 @@ package com.pfeproject.GeniusMind.Services;
 
 import com.pfeproject.GeniusMind.Entity.Level;
 import com.pfeproject.GeniusMind.Entity.Question;
+import com.pfeproject.GeniusMind.Entity.Theme;
 import com.pfeproject.GeniusMind.Repository.LevelRepository;
 import com.pfeproject.GeniusMind.Repository.QuestionRepository;
+import com.pfeproject.GeniusMind.Repository.ThemeRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,10 +34,8 @@ public class QuestionService {
         return addQuestion(questionDto, level);
     }
 
-    public List<Question> getQuestions(Long idLevel) {
-        Level level = levelRepository.findById(idLevel).get();
-
-        return level.getQuestions();
+    public List<Question> getQuestions(Long LevelId, String themename) {
+       return questionRepository.getAll(themename,LevelId);
     }
 
 

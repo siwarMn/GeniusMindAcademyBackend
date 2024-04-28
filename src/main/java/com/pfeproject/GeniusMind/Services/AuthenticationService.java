@@ -39,7 +39,6 @@ public class AuthenticationService {
 
     @Transactional
     public void register(RegisterRequest request) throws Exception {
-        System.out.println("service user ENS "+ request);
         if(repository.findUserByEmail(request.getEmail()).isPresent())
             throw new UserExistException("User exists !");
         var user = User.builder()
@@ -70,7 +69,6 @@ public class AuthenticationService {
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new BadCredentialsException("Invalid password");
         }
-        System.out.println("Helllo service user  "+user.getFirstname());
         String token = jwtService.generateToken(user);
 
         AuthenticationResponse res = new AuthenticationResponse();
@@ -118,6 +116,10 @@ public class AuthenticationService {
     }
 
     public List<User> getAccounts() {
-        return repository.findByRole("ENSEI");
+        Role role = Role.ENSEI;
+        System.out.print("hhhhhhhhhhhhhhhhhhhhhhh "+role);
+        System.out.print("hhhhhhhhhhhhhhhhhhhhhhh "+repository.findUsersByRole(role));
+        return repository.findUsersByRole(role);
+
     }
 }

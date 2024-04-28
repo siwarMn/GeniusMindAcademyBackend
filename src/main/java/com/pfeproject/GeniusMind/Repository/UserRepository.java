@@ -1,7 +1,10 @@
 package com.pfeproject.GeniusMind.Repository;
 
+import com.pfeproject.GeniusMind.Controller.AuthenticationResponse;
+import com.pfeproject.GeniusMind.Entity.Role;
 import com.pfeproject.GeniusMind.Entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -12,5 +15,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
      Optional<User> findUserByEmail(String email);
 
-     List<User> findByRole(String Role);
+     List<User> findUsersByRole(Role role);
+
+//     @Query("SELECT u FROM User u WHERE u.role = :role")
+//     List<User> findUsersByRole( Role role);
 }
