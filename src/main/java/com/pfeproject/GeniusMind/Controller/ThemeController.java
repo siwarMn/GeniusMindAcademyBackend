@@ -21,6 +21,16 @@ public class ThemeController {
         return themeService.addTheme(theme);
     }
 
+    @PostMapping("/UpdTheme")
+    public Theme UpdateTheme(@RequestBody Theme theme) {
+        return themeService.updateTheme(theme);
+    }
+
+    @DeleteMapping("/DeleteTheme/{idtheme}")
+    public void DeleteTheme(@PathVariable Long idtheme) {
+        themeService.deleteTheme( idtheme);
+    }
+
     @GetMapping("/getThemes")
     public List<Theme> getThemes() {
         return themeService.getThemes();

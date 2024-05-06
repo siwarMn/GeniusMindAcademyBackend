@@ -29,4 +29,12 @@ public class ThemeService {
     public Theme getTheme(Long idTheme) {
         return repository.findById(idTheme).get();
     }
+
+    public void deleteTheme(Long idTheme) {
+         repository.deleteById(idTheme);
+    }
+
+    public Theme updateTheme(Theme theme) {
+        return repository.save(theme);
+    }
 }
