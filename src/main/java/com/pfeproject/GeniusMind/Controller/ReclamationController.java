@@ -26,4 +26,9 @@ public class ReclamationController {
     List<reclamation> getAll()  {
         return reclamationService.GetAll();
     }
+
+    @GetMapping("/getnbReclam")
+    long getnbReclam()  {
+        return reclamationService.GetCount();
+    }
 }

@@ -1,10 +1,14 @@
 package com.pfeproject.GeniusMind.Controller;
+import com.pfeproject.GeniusMind.Entity.Role;
 import com.pfeproject.GeniusMind.Entity.User;
 import com.pfeproject.GeniusMind.Exceptions.NotFoundException;
 import com.pfeproject.GeniusMind.Services.AuthenticationService;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,6 +38,26 @@ public class AuthenticationController {
     public AuthenticationResponse authenticate(@RequestBody AuthenticationRequest request) {
         System.out.println(request);
         return service.authenticate(request);
+    }
+
+    @GetMapping("/nbelev")
+    public long getNombreElevesByRole() {
+        Role role = Role.USER;
+        return service.getnbByRole(role);
+    }
+
+    @GetMapping("/nbEnsei")
+    public long getNombreEnseignantByRole() {
+        Role role = Role.ENSEI;
+        return service.getnbByRole(role);
+    }
+
+    @PutMapping("/profile")
+    public String updateProfile(@RequestBody User updatedUser) {
+         System.out.println(updatedUser);
+            service.updateUserProfile(updatedUser);
+            return "Profil mis à jour avec succès !";
+
     }
 
 }

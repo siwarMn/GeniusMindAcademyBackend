@@ -117,9 +117,41 @@ public class AuthenticationService {
 
     public List<User> getAccounts() {
         Role role = Role.ENSEI;
-        System.out.print("hhhhhhhhhhhhhhhhhhhhhhh "+role);
-        System.out.print("hhhhhhhhhhhhhhhhhhhhhhh "+repository.findUsersByRole(role));
         return repository.findUsersByRole(role);
 
+    }
+
+    public long getnbByRole(Role role) {
+        return repository.countByRole(role);
+    }
+
+    public void updateUserProfile(User userDetails) {
+        System.out.println("dkhlna l service "+userDetails);
+        User existingUser = repository.findByEmail(userDetails.getEmail());
+        System.out.println("existing user "+existingUser);
+        if (existingUser != null) {
+            if(userDetails.getFirstname() != null )
+            {
+                existingUser.setFirstname(userDetails.getFirstname());
+            }
+
+            if(userDetails.getLastname() != null )
+            {
+                existingUser.setLastname(userDetails.getLastname());
+            }
+            if(userDetails.getEmail() != null )
+            {
+                existingUser.setEmail(userDetails.getEmail());
+            }
+            if(userDetails.getPassword() != null )
+            {
+                existingUser.setPassword(userDetails.getPassword());
+            }
+            if(userDetails.getNiveau() != null )
+            {
+                existingUser.setNiveau(userDetails.getNiveau());
+            }
+            repository.save(existingUser);
+       }
     }
 }

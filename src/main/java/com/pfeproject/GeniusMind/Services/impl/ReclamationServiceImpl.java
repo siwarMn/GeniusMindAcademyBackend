@@ -23,4 +23,9 @@ public class ReclamationServiceImpl implements ReclamationService {
     public List<reclamation> GetAll() {
         return reclamationRepository.findAll();
     }
+
+    @Override
+    public long GetCount() {
+        return reclamationRepository.count() ;
+    }
 }

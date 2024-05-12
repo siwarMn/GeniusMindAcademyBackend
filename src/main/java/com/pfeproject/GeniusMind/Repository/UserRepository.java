@@ -13,10 +13,13 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {
 
+
      Optional<User> findUserByEmail(String email);
+
+     User findByEmail(String email);
 
      List<User> findUsersByRole(Role role);
 
-//     @Query("SELECT u FROM User u WHERE u.role = :role")
-//     List<User> findUsersByRole( Role role);
+     @Query("SELECT COUNT(e) FROM User e WHERE e.role = :role")
+     long countByRole(Role role);
 }
