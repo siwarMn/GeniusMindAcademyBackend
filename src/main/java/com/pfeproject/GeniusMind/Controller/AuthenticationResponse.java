@@ -16,4 +16,5 @@ public class AuthenticationResponse {
     private Role role;
     private String Nom;
     private String prenom;
+    private String image;
 }

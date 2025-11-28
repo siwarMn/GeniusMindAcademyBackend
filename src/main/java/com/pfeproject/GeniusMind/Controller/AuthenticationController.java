@@ -1,15 +1,12 @@
 package com.pfeproject.GeniusMind.Controller;
+import com.google.gson.Gson;
 import com.pfeproject.GeniusMind.Entity.Role;
 import com.pfeproject.GeniusMind.Entity.User;
-import com.pfeproject.GeniusMind.Exceptions.NotFoundException;
 import com.pfeproject.GeniusMind.Services.AuthenticationService;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -26,12 +23,19 @@ public class AuthenticationController {
         return service.getAccounts();
     }
 
+
+//    @ResponseStatus(HttpStatus.OK)
+//    public void register(@ModelAttribute RegisterRequest request) throws Exception {
+//        service.register(request);
+//    }
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.OK)
-    public void register(@RequestBody RegisterRequest request) throws Exception {
-         service.register(request);
+    public void register(@RequestParam("file") MultipartFile file,
+                         @RequestParam("request") String requestJson
+                         ) throws Exception {
+        RegisterRequest request = new Gson().fromJson(requestJson, RegisterRequest.class);
+        service.register(file,request);
     }
-
 
     @PostMapping("/authenticate")
     @ResponseStatus(HttpStatus.OK)
@@ -53,11 +57,12 @@ public class AuthenticationController {
     }
 
     @PutMapping("/profile")
-    public String updateProfile(@RequestBody User updatedUser) {
-         System.out.println(updatedUser);
-            service.updateUserProfile(updatedUser);
-            return "Profil mis à jour avec succès !";
-
+    public void updateProfile(@RequestBody User updatedUser) {
+        System.out.println(updatedUser);
+        service.updateUserProfile(updatedUser);
     }
-
+    @DeleteMapping("/DeleteProfile/{idprofile}")
+    public void DeleteProfile(@PathVariable Integer idprofile) {
+        service.deleteProfile( idprofile);
+    }
 }

@@ -27,6 +27,11 @@ public class ReclamationController {
         return reclamationService.GetAll();
     }
 
+    @GetMapping("/getReclambyId/{id}")
+    reclamation getreclamById(@PathVariable Long id)  {
+        return reclamationService.getReclamById(id);
+    }
+
     @GetMapping("/getnbReclam")
     long getnbReclam()  {
         return reclamationService.GetCount();

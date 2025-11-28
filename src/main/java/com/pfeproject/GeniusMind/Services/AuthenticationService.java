@@ -5,7 +5,6 @@ import com.pfeproject.GeniusMind.Controller.AuthenticationResponse;
 import com.pfeproject.GeniusMind.Controller.RegisterRequest;
 import com.pfeproject.GeniusMind.Entity.Role;
 import com.pfeproject.GeniusMind.Entity.User;
-import com.pfeproject.GeniusMind.Exceptions.NotFoundException;
 import com.pfeproject.GeniusMind.Exceptions.UserExistException;
 import com.pfeproject.GeniusMind.Repository.UserRepository;
 import com.pfeproject.GeniusMind.config.JwtService;
@@ -23,7 +22,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Base64;
 import java.util.List;
 
 @Service
@@ -38,16 +40,35 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
 
     @Transactional
-    public void register(RegisterRequest request) throws Exception {
+    public void register(MultipartFile file, RegisterRequest request) throws Exception {
         if(repository.findUserByEmail(request.getEmail()).isPresent())
             throw new UserExistException("User exists !");
+        if (file.getOriginalFilename() != null )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        {
+            String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+        }
         var user = User.builder()
                 .firstname((request.getFirstname()))
                 .lastname(request.getLastname())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole())
+                .role(Role.USER)
                 .niveau(request.getNiveau())
+                .image(Base64.getEncoder().encodeToString(file.getBytes()))
                 .build();
 
         repository.save(user);
@@ -76,6 +97,7 @@ public class AuthenticationService {
         res.setRole(user.getRole());
         res.setNom(user.getFirstname());
         res.setPrenom(user.getLastname());
+        res.setImage(user.getImage());
         log.info(res.getToken());
         return res;
 
@@ -152,6 +174,10 @@ public class AuthenticationService {
                 existingUser.setNiveau(userDetails.getNiveau());
             }
             repository.save(existingUser);
-       }
+        }
+    }
+
+    public void deleteProfile(Integer idprofile) {
+        repository.deleteById(idprofile);
     }
 }

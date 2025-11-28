@@ -9,5 +9,7 @@ public interface ReclamationService {
     reclamation AddReclamation(reclamation reclam);
 
     List<reclamation> GetAll();
+
+    reclamation getReclamById(Long id);
     long GetCount();
 }
