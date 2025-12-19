@@ -10,11 +10,9 @@ import com.pfeproject.GeniusMind.Repository.UserRepository;
 import com.pfeproject.GeniusMind.config.JwtService;
 import com.pfeproject.GeniusMind.dto.ForgotPassword;
 import com.pfeproject.GeniusMind.dto.ResetPassword;
+import com.pfeproject.GeniusMind.dto.UpdateProfileRequest;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.antlr.v4.runtime.Token;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.security.Principal;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
@@ -39,143 +39,172 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
+    /* ========================= REGISTER ========================= */
+
     @Transactional
     public void register(MultipartFile file, RegisterRequest request) throws Exception {
-        if(repository.findUserByEmail(request.getEmail()).isPresent())
-            throw new UserExistException("User exists !");
-        if (file.getOriginalFilename() != null )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-        {
-            String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+        if (repository.findUserByEmail(request.getEmail()).isPresent()) {
+            throw new UserExistException("User already exists");
         }
-        var user = User.builder()
-                .firstname((request.getFirstname()))
+
+        String imageBase64 = null;
+        if (file != null && !file.isEmpty()) {
+            String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+            log.info("Uploading image: {}", fileName);
+            imageBase64 = Base64.getEncoder().encodeToString(file.getBytes());
+        }
+
+        User user = User.builder()
+                .firstname(request.getFirstname())
                 .lastname(request.getLastname())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.USER)
                 .niveau(request.getNiveau())
-                .image(Base64.getEncoder().encodeToString(file.getBytes()))
+                .image(imageBase64.getBytes())
                 .build();
 
         repository.save(user);
-        var jwtToken = jwtService.generateToken(user);
+
+        String jwtToken = jwtService.generateToken(user);
         String link = "http://localhost:4200/activated?token=" + jwtToken;
 
-        String body = emailService.buildEmail(user.getFirstname(), link);
         emailService.sendSimpleEmail(
                 user.getEmail(),
                 "Please confirm your account",
-                body
+                emailService.buildEmail(user.getFirstname(), link)
         );
     }
 
-    public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        User user = repository.findUserByEmail(request.getEmail())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + request.getEmail()));
+    /* ========================= AUTHENTICATE ========================= */
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new BadCredentialsException("Invalid password");
+    public AuthenticationResponse authenticate(AuthenticationRequest request) {
+
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+        } catch (BadCredentialsException e) {
+            throw new BadCredentialsException("Invalid email or password");
         }
+
+        User user = repository.findUserByEmail(request.getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
         String token = jwtService.generateToken(user);
 
-        AuthenticationResponse res = new AuthenticationResponse();
-        res.setToken(token);
-        res.setRole(user.getRole());
-        res.setNom(user.getFirstname());
-        res.setPrenom(user.getLastname());
-        res.setImage(user.getImage());
-        log.info(res.getToken());
-        return res;
-
-
+        return AuthenticationResponse.builder()
+                .token(token)
+                .role(user.getRole())
+                .Nom(user.getFirstname())
+                .prenom(user.getLastname())
+                .image(Arrays.toString(user.getImage()))
+                .build();
     }
 
+    /* ========================= FORGOT PASSWORD ========================= */
 
-    public String forgotpassword(ForgotPassword email){
+    public String forgotpassword(ForgotPassword email) {
 
-        log.info(email.getEmail());
-        User user= repository.findUserByEmail(email.getEmail()).orElseThrow();
+        User user = repository.findUserByEmail(email.getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         String token = jwtService.generateToken(user);
-
         String link = "http://localhost:4200/reset-password?token=" + token;
-        log.info(link);
-        String body = emailService.buildEmail(user.getUsername(), link);
+
         emailService.sendSimpleEmail(
                 user.getEmail(),
                 "Password Reset",
-                body
+                emailService.buildEmail(user.getFirstname(), link)
         );
 
-        return "email sent";
+        return "Email sent";
     }
 
-    public void resetpassword(ResetPassword password, String token){
-        if(jwtService.isTokenExpired(token))
+    /* ========================= RESET PASSWORD ========================= */
+
+    public void resetpassword(ResetPassword password, String token) {
+
+        if (jwtService.isTokenExpired(token)) {
             throw new IllegalStateException("Expired token");
+        }
+
         String email = jwtService.extractUsername(token);
-        User user= repository.findUserByEmail(email).orElseThrow(()-> new IllegalStateException("Token invalid"));
-        log.info(user.getPassword());
-        log.info(password.getPassword());
+
+        User user = repository.findUserByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("Invalid token"));
 
         user.setPassword(passwordEncoder.encode(password.getPassword()));
-        log.info(user.getPassword());
         repository.save(user);
     }
 
-    public List<User> getAccounts() {
-        Role role = Role.ENSEI;
-        return repository.findUsersByRole(role);
+    /* ========================= USERS ========================= */
 
+    public List<User> getAccounts() {
+        return repository.findUsersByRole(Role.ENSEI);
     }
 
     public long getnbByRole(Role role) {
         return repository.countByRole(role);
     }
 
-    public void updateUserProfile(User userDetails) {
-        System.out.println("dkhlna l service "+userDetails);
-        User existingUser = repository.findByEmail(userDetails.getEmail());
-        System.out.println("existing user "+existingUser);
-        if (existingUser != null) {
-            if(userDetails.getFirstname() != null )
-            {
-                existingUser.setFirstname(userDetails.getFirstname());
-            }
+    /* ========================= UPDATE PROFILE ========================= */
 
-            if(userDetails.getLastname() != null )
-            {
-                existingUser.setLastname(userDetails.getLastname());
+    @Transactional
+    public void updateUserProfile(MultipartFile file, UpdateProfileRequest request, Principal connectedUser) throws Exception {
+
+        // Find user by connected principal (current secure user)
+        User existingUser = repository.findUserByEmail(connectedUser.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (request.getFirstname() != null)
+            existingUser.setFirstname(request.getFirstname());
+
+        if (request.getLastname() != null)
+            existingUser.setLastname(request.getLastname());
+
+        if (request.getNiveau() != null)
+            existingUser.setNiveau(request.getNiveau());
+
+        // Email Update Logic
+        if (request.getEmail() != null && !request.getEmail().equals(existingUser.getEmail())) {
+            // Check if new email is taken
+            if (repository.findUserByEmail(request.getEmail()).isPresent()) {
+                throw new UserExistException("Email already in use");
             }
-            if(userDetails.getEmail() != null )
-            {
-                existingUser.setEmail(userDetails.getEmail());
-            }
-            if(userDetails.getPassword() != null )
-            {
-                existingUser.setPassword(userDetails.getPassword());
-            }
-            if(userDetails.getNiveau() != null )
-            {
-                existingUser.setNiveau(userDetails.getNiveau());
-            }
-            repository.save(existingUser);
+            existingUser.setEmail(request.getEmail());
         }
+
+        // Password Update Logic
+        if (request.getNewPassword() != null && !request.getNewPassword().isEmpty()) {
+            if (request.getOldPassword() == null || request.getOldPassword().isEmpty()) {
+                throw new IllegalStateException("Old password is required");
+            }
+            if (!passwordEncoder.matches(request.getOldPassword(), existingUser.getPassword())) {
+                throw new IllegalStateException("Invalid old password");
+            }
+            if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+                throw new IllegalStateException("Passwords do not match");
+            }
+            existingUser.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        }
+
+        // Image Update Logic
+        if (file != null && !file.isEmpty()) {
+            String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+            log.info("Uploading image: {}", fileName);
+            String imageBase64 = Base64.getEncoder().encodeToString(file.getBytes());
+            existingUser.setImage(imageBase64.getBytes());
+        }
+
+        repository.save(existingUser);
     }
+
+    /* ========================= DELETE ========================= */
 
     public void deleteProfile(Integer idprofile) {
         repository.deleteById(idprofile);

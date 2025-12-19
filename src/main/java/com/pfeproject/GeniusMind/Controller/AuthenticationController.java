@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import com.pfeproject.GeniusMind.dto.UpdateProfileRequest;
+import java.security.Principal;
 
 import java.util.List;
 
@@ -57,9 +59,13 @@ public class AuthenticationController {
     }
 
     @PutMapping("/profile")
-    public void updateProfile(@RequestBody User updatedUser) {
-        System.out.println(updatedUser);
-        service.updateUserProfile(updatedUser);
+    public void updateProfile(@RequestParam(value = "file", required = false) MultipartFile file,
+                              @RequestParam("request") String requestJson,
+                              Principal connectedUser) throws Exception {
+        System.out.println(requestJson);
+        UpdateProfileRequest request = new Gson().fromJson(requestJson, UpdateProfileRequest.class);
+        System.out.println(request);
+        service.updateUserProfile(file, request, connectedUser);
     }
     @DeleteMapping("/DeleteProfile/{idprofile}")
     public void DeleteProfile(@PathVariable Integer idprofile) {
