@@ -1,15 +1,28 @@
 package com.pfeproject.GeniusMind.Services;
 
-import com.pfeproject.GeniusMind.Entity.reclamation;
+import com.pfeproject.GeniusMind.dto.CommentResponse;
+import com.pfeproject.GeniusMind.dto.ReclamationRequest;
+import com.pfeproject.GeniusMind.dto.ReclamationResponse;
 
 import java.util.List;
 
 public interface ReclamationService {
 
-    reclamation AddReclamation(reclamation reclam);
+    ReclamationResponse AddReclamation(ReclamationRequest request);
 
-    List<reclamation> GetAll();
+    List<ReclamationResponse> GetAll();
 
-    reclamation getReclamById(Long id);
+    ReclamationResponse getReclamById(Long id);
+
     long GetCount();
+
+    ReclamationResponse updateStatus(Long id, String status);
+
+    void deleteReclamation(Long id);
+
+    CommentResponse addComment(Long reclamationId, String author, String text);
+
+    ReclamationResponse assignReclamation(Long id, String assignedTo);
+
+    ReclamationResponse rateReclamation(Long id, Integer rating);
 }
