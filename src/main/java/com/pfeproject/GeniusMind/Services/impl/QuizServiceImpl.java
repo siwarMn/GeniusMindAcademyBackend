@@ -1,86 +1,207 @@
 package com.pfeproject.GeniusMind.Services.impl;
+
+import com.pfeproject.GeniusMind.Entity.*;
+import com.pfeproject.GeniusMind.Repository.*;
 import com.pfeproject.GeniusMind.Services.QuizService;
-import com.pfeproject.GeniusMind.dto.QuizDto;
-import com.pfeproject.GeniusMind.dto.QuizQuestionDto;
-import com.pfeproject.GeniusMind.Entity.Quiz;
-import com.pfeproject.GeniusMind.Entity.QuizQuestion;
-import com.pfeproject.GeniusMind.Repository.QuizRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.pfeproject.GeniusMind.dto.*;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class QuizServiceImpl implements QuizService {
 
-    @Autowired
-    private QuizRepository quizRepository;
+    private final QuizRepository quizRepository;
+    private final QuizAssignmentRepository quizAssignmentRepository;
+    private final QuizScoreRepository quizScoreRepository;
+    private final UserRepository userRepository;
+
+    // =========================================================
+    // QUIZ POUR ÉTUDIANT
+    // =========================================================
 
     @Override
-    public List<QuizDto> getAllQuizzes() {
-        /*return quizRepository.findAllByIsActiveTrue()
+    public List<QuizDto> getStudentQuizzes(String studentName) {
+
+        Long studentId = userRepository.findIdByFirstname(studentName);
+
+        return quizAssignmentRepository.findByStudentId(studentId)
                 .stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());*/
+                .map(assignment -> {
+                    Quiz quiz = assignment.getQuiz();
+                    QuizDto dto = convertQuizToDto(quiz);
 
-        // DONNÉES STATIQUES POUR TEST
-        QuizQuestionDto q1 = new QuizQuestionDto();
-        q1.setId(1);
-        q1.setQuestion("Quelle est la valeur de 2x + 5 = 15 ?");
-        q1.setOptions(List.of("x = 5", "x = 10", "x = 7.5", "x = 8"));
-        q1.setCorrectAnswer("x = 5");
-        q1.setExplanation("2x + 5 = 15 ⇒ 2x = 10 ⇒ x = 5");
+                    dto.setCompleted(
+                            assignment.getCompleted() != null && assignment.getCompleted()
+                    );
 
-        QuizQuestionDto q2 = new QuizQuestionDto();
-        q2.setId(2);
-        q2.setQuestion("Quelle est l'aire d'un cercle de rayon 3 cm ?");
-        q2.setOptions(List.of("9π cm²", "6π cm²", "3π cm²", "12π cm²"));
-        q2.setCorrectAnswer("9π cm²");
-        q2.setExplanation("Aire = π × r² = π × 3² = 9π");
-
-        QuizDto quiz = new QuizDto();
-        quiz.setId(1);
-        quiz.setTitle("Quiz de Mathématiques Avancées");
-        quiz.setDescription("Testez vos connaissances en algèbre et géométrie avancée");
-        quiz.setLevelId(3);
-        quiz.setIsActive(true);
-        quiz.setQuestions(List.of(q1, q2));
-
-        return List.of(quiz);
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
-    public QuizDto getQuizById(Integer id) {
-        Quiz quiz = quizRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Quiz non trouvé"));
-        return convertToDto(quiz);
+    public QuizDto getQuizDetails(Long quizId) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() ->
+                        new RuntimeException("Quiz non trouvé avec l'ID: " + quizId)
+                );
+
+        return convertQuizToDto(quiz);
     }
 
-    // mapping ultra-simple
-    private QuizDto convertToDto(Quiz quiz) {
+    // =========================================================
+    // DÉMARRER & SOUMETTRE QUIZ
+    // =========================================================
+
+    @Override
+    public QuizScoreDto startQuiz(String studentName, Long quizId) {
+
+        Long studentId = userRepository.findIdByFirstname(studentName);
+
+        QuizAssignment assignment = quizAssignmentRepository
+                .findByStudentIdAndQuizId(studentId, quizId)
+                .orElseThrow(() -> new RuntimeException("Assignment non trouvé"));
+
+        assignment.setStarted(true);
+        quizAssignmentRepository.save(assignment);
+
+        QuizScore score = quizScoreRepository
+                .findByStudentIdAndQuizId(studentId, quizId)
+                .orElseGet(() -> {
+                    QuizScore newScore = new QuizScore();
+                    newScore.setStudent(assignment.getStudent());
+                    newScore.setQuiz(assignment.getQuiz());
+                    newScore.setFinished(false);
+                    return quizScoreRepository.save(newScore);
+                });
+
+        return convertQuizScoreToDto(score);
+    }
+
+    @Override
+    public QuizScoreDto submitQuizScore(
+            String studentName,
+            Long quizId,
+            Integer scoreValue,
+            Integer total,
+            Long duration
+    ) {
+
+        Long studentId = userRepository.findIdByFirstname(studentName);
+
+        QuizScore score = quizScoreRepository
+                .findByStudentIdAndQuizId(studentId, quizId)
+                .orElseThrow(() -> new RuntimeException("Score non trouvé"));
+
+        score.setScore(scoreValue);
+        score.setTotal(total);
+        score.setDurationSec(duration);
+        score.setFinished(true);
+
+        quizScoreRepository.save(score);
+
+        QuizAssignment assignment = quizAssignmentRepository
+                .findByStudentIdAndQuizId(studentId, quizId)
+                .orElseThrow(() -> new RuntimeException("Assignment non trouvé"));
+
+        assignment.setCompleted(true);
+        quizAssignmentRepository.save(assignment);
+
+        return convertQuizScoreToDto(score);
+    }
+
+    // =========================================================
+    // RÉSULTATS & SCORES
+    // =========================================================
+
+    public QuizScoreDto getQuizResult(String studentName, Long quizId) {
+
+        Long studentId = userRepository.findIdByFirstname(studentName);
+
+        QuizScore result = quizScoreRepository
+                .findByStudentIdAndQuizId(studentId, quizId)
+                .orElseThrow(() ->
+                        new RuntimeException("Résultat du quiz non trouvé")
+                );
+
+        return convertQuizScoreToDto(result);
+    }
+
+    @Override
+    public List<QuizScoreDto> getStudentScores(Long studentId) {
+        return quizScoreRepository.findByStudentId(studentId)
+                .stream()
+                .map(this::convertQuizScoreToDto)
+                .collect(Collectors.toList());
+    }
+
+    // =========================================================
+    // CONVERSIONS ENTITY → DTO
+    // =========================================================
+
+    private QuizDto convertQuizToDto(Quiz quiz) {
         QuizDto dto = new QuizDto();
         dto.setId(quiz.getId());
         dto.setTitle(quiz.getTitle());
         dto.setDescription(quiz.getDescription());
-        dto.setLevelId(quiz.getLevelId());
-        dto.setIsActive(quiz.getIsActive());
+        dto.setLevel(quiz.getLevel());
+        dto.setActive(quiz.getActive());
+
         dto.setQuestions(
-                quiz.getQuestions()
-                        .stream()
+                quiz.getQuestions() != null
+                        ? quiz.getQuestions().stream()
                         .map(this::convertQuestionToDto)
                         .collect(Collectors.toList())
+                        : new ArrayList<>()
         );
+
         return dto;
     }
 
-    private QuizQuestionDto convertQuestionToDto(QuizQuestion q) {
-        QuizQuestionDto qDto = new QuizQuestionDto();
-        qDto.setId(q.getId());
-        qDto.setQuestion(q.getQuestion());
-        qDto.setOptions(q.getOptions());
-        qDto.setCorrectAnswer(q.getCorrectAnswer());
-        qDto.setExplanation(q.getExplanation());
-        return qDto;
+    private QuestionDto convertQuestionToDto(Question question) {
+        QuestionDto dto = new QuestionDto();
+        dto.setId(question.getId());
+        dto.setLabel(question.getLabel());
+        dto.setQuizId(question.getQuiz().getId());
+        dto.setLevelId(
+                question.getLevel() != null ? question.getLevel().getId() : null
+        );
+
+        dto.setOptions(
+                question.getOptions() != null
+                        ? question.getOptions().stream()
+                        .map(this::convertOptionToDto)
+                        .collect(Collectors.toList())
+                        : new ArrayList<>()
+        );
+
+        return dto;
+    }
+
+    private OptionDto convertOptionToDto(Option option) {
+        OptionDto dto = new OptionDto();
+        dto.setId(option.getId());
+        dto.setLabel(option.getLabel());
+        dto.setCorrect(option.getCorrect());
+        dto.setQuestionId(option.getQuestion().getId());
+        return dto;
+    }
+
+    private QuizScoreDto convertQuizScoreToDto(QuizScore score) {
+        QuizScoreDto dto = new QuizScoreDto();
+        dto.setId(score.getId());
+        dto.setStudentId(score.getStudent().getId().longValue());
+        dto.setQuizId(score.getQuiz().getId());
+        dto.setScore(score.getScore());
+        dto.setTotal(score.getTotal());
+        dto.setDurationSec(score.getDurationSec());
+        dto.setFinished(score.getFinished());
+        return dto;
     }
 }

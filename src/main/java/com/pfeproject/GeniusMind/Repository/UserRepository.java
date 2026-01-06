@@ -5,6 +5,7 @@ import com.pfeproject.GeniusMind.Entity.Role;
 import com.pfeproject.GeniusMind.Entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -22,4 +23,9 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
      @Query("SELECT COUNT(e) FROM User e WHERE e.role = :role")
      long countByRole(Role role);
+
+
+     @Query("SELECT u.id FROM User u WHERE u.firstname = :firstname")
+     Long findIdByFirstname(@Param("firstname") String firstname);
+
 }

@@ -5,22 +5,23 @@ import lombok.*;
 import java.util.List;
 
 @Entity
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 @Table(name = "quiz")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Quiz {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     private String title;
 
     @Column(length = 1000)
     private String description;
 
-    private Integer levelId;   // 1=Facile, 2=Moyen, 3=Difficile
-    private Boolean isActive = true;
+    private Integer level;
+    private Boolean active;
 
-    @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private List<QuizQuestion> questions;
+    @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL)
+    private List<Question> questions;
 }
