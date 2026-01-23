@@ -1,29 +1,29 @@
 package com.pfeproject.GeniusMind.Entity;
 
+
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
 
 @Entity
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
-@Table(name = "question")
-public class Question {
+@Table(name = "quiz_assignment")
+public class QuizAssignment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String label;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "student_id")
+    private User student;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "quiz_id")
     private Quiz quiz;
 
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL)
-    private List<Option> options;
-
-    @ManyToOne
-    private Level level;
+    private Boolean started = false;
+    private Boolean completed = false;
 }
+

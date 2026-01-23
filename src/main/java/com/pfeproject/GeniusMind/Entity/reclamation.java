@@ -1,10 +1,11 @@
 package com.pfeproject.GeniusMind.Entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -22,5 +23,13 @@ public class reclamation {
     private String Categorie;
     private String Description;
     private String Creerpar;
+    private String status;
+    private String priority;
+    private String assignedTo;
+    private Integer rating;
+    private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "reclamation", cascade = CascadeType.ALL)
+    private List<ReclamationComment> comments = new ArrayList<>();
 
 }
