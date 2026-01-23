@@ -19,10 +19,10 @@ public class reclamation {
     @GeneratedValue(strategy  = GenerationType.IDENTITY)
     private Long id;
 
-    private String Titre;
-    private String Categorie;
-    private String Description;
-    private String Creerpar;
+    private String titre;
+    private String categorie;
+    private String description;
+    private String creerPar;
     private String status;
     private String priority;
     private String assignedTo;
